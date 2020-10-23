@@ -13,8 +13,14 @@ import com.trustwallet.core.app.utils.toHexBytes
 import com.trustwallet.core.app.utils.toHexBytesInByteString
 import junit.framework.Assert.assertEquals
 import org.junit.Test
-import wallet.core.jni.PermissionSigner
 import wallet.core.jni.proto.Permission
+import wallet.core.jni.proto.Permission.SigningOutput
+
+import wallet.core.java.AnySigner
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType.PERMISSION
+import wallet.core.jni.PrivateKey
+import org.junit.Assert.assertArrayEquals
 
 class TestPermissionSigner {
 
@@ -23,8 +29,8 @@ class TestPermissionSigner {
     }
 
     @Test
-    fun testEthereumTransactionSigning() {
-        val signingInput = Ethereum.SigningInput.newBuilder()
+    fun testPermissionTransactionSigning() {
+        val signingInput = Permission.SigningInput.newBuilder()
         signingInput.apply {
             privateKey = ByteString.copyFrom(PrivateKey("0x4646464646464646464646464646464646464646464646464646464646464646".toHexByteArray()).data())
             toAddress = "0x3535353535353535353535353535353535353535"
@@ -35,8 +41,8 @@ class TestPermissionSigner {
             amount = ByteString.copyFrom("0x0de0b6b3a7640000".toHexByteArray())
         }
 
-        val output = AnySigner.sign(signingInput.build(), ETHEREUM, SigningOutput.parser())
-        val encoded = AnySigner.encode(signingInput.build(), ETHEREUM)
+        val output = AnySigner.sign(signingInput.build(), PERMISSION, SigningOutput.parser())
+        val encoded = AnySigner.encode(signingInput.build(), PERMISSION)
 
         assertArrayEquals(output.encoded.toByteArray(), encoded)
         assertEquals(Numeric.toHexString(output.v.toByteArray()), "0x25")
@@ -46,9 +52,9 @@ class TestPermissionSigner {
     }
 
     @Test
-    fun testEthereumTransactionDecoding() {
+    fun testPermissionTransactionDecoding() {
         val rawTx = "0xf8a86484b2d05e008277fb9400000000000c2e074ec69a0dfb2997ba6c7d2e1e80b8441896f70ae71cd96d4ba1c4b512b0c5bee30d2b6becf61e574c32a17a67156fa9ed3c4c6f0000000000000000000000004976fb03c32e5b8cfe2b6ccb31c09ba78ebaba4125a0b55e479d5872b7531437621780ead128cd25d8988fb3cda9bcfb4baeb0eda4dfa077b096cf0cb4bee6eb8c756e9cdba95a6cf62af74e05e7e4cdaa8100271a508d".toHexByteArray()
-        val decoded = AnySigner.decode(rawTx, ETHEREUM)
+        val decoded = AnySigner.decode(rawTx, PERMISSION)
 
         assertEquals(String(decoded), """{"gas":"0x77fb","gasPrice":"0xb2d05e00","input":"0x1896f70ae71cd96d4ba1c4b512b0c5bee30d2b6becf61e574c32a17a67156fa9ed3c4c6f0000000000000000000000004976fb03c32e5b8cfe2b6ccb31c09ba78ebaba41","nonce":"0x64","r":"0xb55e479d5872b7531437621780ead128cd25d8988fb3cda9bcfb4baeb0eda4df","s":"0x77b096cf0cb4bee6eb8c756e9cdba95a6cf62af74e05e7e4cdaa8100271a508d","to":"0x00000000000c2e074ec69a0dfb2997ba6c7d2e1e","v":"0x25","value":"0x"}""")
     }
